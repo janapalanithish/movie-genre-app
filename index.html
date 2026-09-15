@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Genre Tracker | Stream & Discover</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+              900: '#4c1d95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass-panel {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(23, 31, 48, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(139, 92, 246, 0.35);
+      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6), 0 0 20px -2px rgba(139, 92, 246, 0.15);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.45);
+    }
+    /* Ambient glow */
+    .bg-glow {
+      background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(59, 130, 246, 0.08) 35%, transparent 70%);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-purple-600 selection:text-white bg-glow">
+
+  <!-- TOP NAVBAR -->
+  <header class="sticky top-0 z-40 glass-panel border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20 gap-4">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/25 ring-1 ring-white/20">
+            <i data-lucide="clapperboard" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-display font-bold text-lg sm:text-2xl text-white tracking-tight">Movie Genre <span class="bg-gradient-to-r from-purple-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">Tracker</span></h1>
+              <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">v1.0</span>
+            </div>
+            <p class="text-xs text-slate-400 hidden sm:block">Curate, filter by genre & discover streaming platforms</p>
+          </div>
+        </div>
+
+        <!-- Quick Stats & Action Buttons -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Reset / Sample Data -->
+          <button id="reset-data-btn" title="Reset to Sample Data" class="p-2 sm:px-3 sm:py-2 text-xs font-medium text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 border border-white/5 hover:border-white/10 rounded-xl transition flex items-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            <span class="hidden md:inline">Reset Samples</span>
+          </button>
+
+          <!-- Add Movie Button -->
+          <button id="open-add-modal-btn" class="px-4 py-2 sm:py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium text-sm rounded-xl shadow-lg shadow-purple-600/30 ring-1 ring-white/20 flex items-center gap-2 transition transform active:scale-95">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Add Movie</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+    <!-- HERO / STATS BAR -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div class="glass-panel p-4 rounded-2xl flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+          <i data-lucide="film" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Movies</p>
+          <p id="stat-total" class="text-xl sm:text-2xl font-display font-bold text-white">0</p>
+        </div>
+      </div>
+
+      <div class="glass-panel p-4 rounded-2xl flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <i data-lucide="tags" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Genres</p>
+          <p id="stat-genres" class="text-xl sm:text-2xl font-display font-bold text-white">0</p>
+        </div>
+      </div>
+
+      <div class="glass-panel p-4 rounded-2xl flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Watched</p>
+          <p id="stat-watched" class="text-xl sm:text-2xl font-display font-bold text-white">0</p>
+        </div>
+      </div>
+
+      <div class="glass-panel p-4 rounded-2xl flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Watchlist</p>
+          <p id="stat-watchlist" class="text-xl sm:text-2xl font-display font-bold text-white">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER & SEARCH BAR SECTION -->
+    <div class="glass-panel p-4 sm:p-5 rounded-2xl space-y-4">
+      <!-- Search & Select Controls -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search movies by title, director, OTT or keywords..."
+            class="w-full pl-10 pr-10 py-2.5 bg-slate-900/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+          >
+          <button id="clear-search-btn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Filter Dropdowns -->
+        <div class="flex items-center gap-2">
+          <!-- OTT Filter -->
+          <select id="ott-filter" class="bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-300 focus:outline-none focus:border-purple-500">
+            <option value="ALL">All Platforms</option>
+            <option value="Netflix">Netflix</option>
+            <option value="Amazon Prime">Prime Video</option>
+            <option value="Disney+ Hotstar">Disney+ Hotstar</option>
+            <option value="Apple TV+">Apple TV+</option>
+            <option value="HBO Max">HBO / Max</option>
+            <option value="Hulu">Hulu</option>
+            <option value="YouTube">YouTube</option>
+            <option value="OTHER">Other</option>
+          </select>
+
+          <!-- Status Filter -->
+          <select id="status-filter" class="bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-300 focus:outline-none focus:border-purple-500">
+            <option value="ALL">All Status</option>
+            <option value="watchlist">Want to Watch</option>
+            <option value="watched">Watched</option>
+          </select>
+
+          <!-- Sort Order -->
+          <select id="sort-select" class="bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-slate-300 focus:outline-none focus:border-purple-500">
+            <option value="newest">Newest First</option>
+            <option value="rating-desc">Highest Rated</option>
+            <option value="year-desc">Year (Newest)</option>
+            <option value="title-asc">Title (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- GENRE TABS (Dynamic Scrollable List) -->
+      <div class="border-t border-white/5 pt-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-purple-400"></i>
+            Filter by Genre
+          </span>
+          <span id="results-count" class="text-xs text-slate-400">Showing 0 movies</span>
+        </div>
+        <div id="genre-tabs-container" class="flex items-center gap-2 overflow-x-auto pb-1.5 custom-scrollbar">
+          <!-- Dynamic genre tabs will be rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- MOVIE CARDS GRID -->
+    <div id="movies-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+      <!-- Cards rendered here via JS -->
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="empty-state" class="hidden glass-panel rounded-3xl p-12 text-center max-w-lg mx-auto my-8 space-y-4">
+      <div class="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mx-auto">
+        <i data-lucide="film" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h3 class="font-display text-lg font-bold text-white">No Movies Found</h3>
+        <p class="text-sm text-slate-400 mt-1">Try tweaking your search keywords, clearing filters, or adding a new movie to your collection.</p>
+      </div>
+      <div class="flex justify-center gap-3 pt-2">
+        <button id="clear-all-filters-btn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-white/10 transition">
+          Clear Filters
+        </button>
+        <button id="empty-add-btn" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition flex items-center gap-1.5">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Movie
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="glass-panel border-t border-white/5 py-6 mt-12 text-xs text-slate-500 text-center">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>🎬 <strong>Movie Genre Tracker</strong> &copy; <span id="current-year"></span>. Manage your watchlist seamlessly.</p>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span class="flex items-center gap-1"><i data-lucide="database" class="w-3.5 h-3.5"></i> LocalStorage Enabled</span>
+        <button id="export-json-btn" class="hover:text-purple-400 transition flex items-center gap-1">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Export
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ADD / EDIT MOVIE MODAL -->
+  <div id="movie-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="glass-panel bg-slate-900/95 border border-white/10 rounded-2xl w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center">
+            <i data-lucide="film" class="w-4 h-4"></i>
+          </div>
+          <h2 id="modal-title" class="text-lg font-display font-bold text-white">Add New Movie</h2>
+        </div>
+        <button id="close-modal-btn" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Form Body -->
+      <form id="movie-form" class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+        <input type="hidden" id="movie-id">
+
+        <!-- Title -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-title">
+            Movie Title <span class="text-purple-400">*</span>
+          </label>
+          <input
+            type="text"
+            id="movie-title"
+            required
+            placeholder="e.g., Inception, Dune: Part Two, The Matrix"
+            class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+          >
+        </div>
+
+        <!-- Genre & Release Year -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-genre">
+              Genre <span class="text-purple-400">*</span>
+            </label>
+            <div class="relative">
+              <select
+                id="movie-genre-select"
+                class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500"
+              >
+                <option value="Action">Action</option>
+                <option value="Sci-Fi">Sci-Fi</option>
+                <option value="Thriller">Thriller</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Drama">Drama</option>
+                <option value="Horror">Horror</option>
+                <option value="Animation">Animation</option>
+                <option value="Romance">Romance</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Crime">Crime</option>
+                <option value="Mystery">Mystery</option>
+                <option value="Fantasy">Fantasy</option>
+                <option value="Documentary">Documentary</option>
+                <option value="custom">+ Custom Genre...</option>
+              </select>
+            </div>
+            <!-- Custom Genre input (hidden by default) -->
+            <input
+              type="text"
+              id="movie-genre-custom"
+              placeholder="Enter custom genre"
+              class="mt-2 hidden w-full px-3.5 py-2 bg-slate-950/80 border border-purple-500/40 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-year">
+              Release Year
+            </label>
+            <input
+              type="number"
+              id="movie-year"
+              min="1900"
+              max="2035"
+              placeholder="e.g. 2024"
+              class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            >
+          </div>
+        </div>
+
+        <!-- Primary OTT Platform & Direct Link -->
+        <div class="border-t border-white/5 pt-3 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-ott">
+                Primary OTT Platform <span class="text-purple-400">*</span>
+              </label>
+              <select
+                id="movie-ott"
+                class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500"
+              >
+                <option value="Netflix">Netflix</option>
+                <option value="Amazon Prime">Amazon Prime Video</option>
+                <option value="Disney+ Hotstar">Disney+ Hotstar</option>
+                <option value="Apple TV+">Apple TV+</option>
+                <option value="HBO Max">HBO Max / Max</option>
+                <option value="Hulu">Hulu</option>
+                <option value="Paramount+">Paramount+</option>
+                <option value="Peacock">Peacock</option>
+                <option value="YouTube">YouTube Movies</option>
+                <option value="SonyLIV">SonyLIV</option>
+                <option value="Zee5">Zee5</option>
+                <option value="Other">Other Platform</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-ott-link">
+                Platform Direct Link <span class="text-slate-500 font-normal">(optional)</span>
+              </label>
+              <input
+                type="url"
+                id="movie-ott-link"
+                placeholder="https://netflix.com/title/..."
+                class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Alternative / Fallback Streaming Link -->
+        <div class="border-t border-white/5 pt-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider" for="movie-alt-link">
+              Alternative / Fallback Stream Link
+            </label>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="fill-yt-search-btn" class="text-[11px] text-purple-400 hover:text-purple-300 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+                + Auto YouTube Search
+              </button>
+              <button type="button" id="fill-google-search-btn" class="text-[11px] text-indigo-400 hover:text-indigo-300 px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">
+                + Auto Google Search
+              </button>
+            </div>
+          </div>
+          <input
+            type="url"
+            id="movie-alt-link"
+            placeholder="e.g. https://www.youtube.com/results?search_query=movie+name"
+            class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+          >
+          <p class="text-[11px] text-slate-400 mt-1">Direct fallback if unavailable on primary OTT or for trailers / free rental options.</p>
+        </div>
+
+        <!-- Rating & Watch Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-white/5 pt-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-rating">
+              Rating (1 - 10)
+            </label>
+            <input
+              type="number"
+              id="movie-rating"
+              min="1"
+              max="10"
+              step="0.1"
+              placeholder="e.g. 8.8"
+              class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-status">
+              Watch Status
+            </label>
+            <select
+              id="movie-status"
+              class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500"
+            >
+              <option value="watchlist">Want to Watch (Watchlist)</option>
+              <option value="watched">Watched</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Poster Image URL & Description -->
+        <div class="border-t border-white/5 pt-3 space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-poster">
+              Poster Image URL <span class="text-slate-500 font-normal">(optional)</span>
+            </label>
+            <input
+              type="url"
+              id="movie-poster"
+              placeholder="https://images.unsplash.com/... or TMDB image url"
+              class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5" for="movie-notes">
+              Synopsis / Notes <span class="text-slate-500 font-normal">(optional)</span>
+            </label>
+            <textarea
+              id="movie-notes"
+              rows="2"
+              placeholder="Short plot summary, recommended by friend, favorite actor, etc."
+              class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 resize-none"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+          <button
+            type="button"
+            id="cancel-modal-btn"
+            class="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/30 transition flex items-center gap-2"
+          >
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span id="save-btn-text">Save Movie</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- APP JAVASCRIPT LOGIC -->
+  <script>
+    // --- SAMPLE SEED DATA ---
+    const SAMPLE_MOVIES = [
+      {
+        id: "m_inception_1",
+        title: "Inception",
+        genre: "Sci-Fi",
+        year: 2010,
+        rating: 8.8,
+        ott: "Netflix",
+        ottLink: "https://www.netflix.com/search?q=Inception",
+        altLink: "https://www.youtube.com/results?search_query=Inception+Full+Movie+Rent",
+        status: "watched",
+        poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80",
+        notes: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.",
+        createdAt: Date.now() - 1000 * 60 * 60 * 24 * 5
+      },
+      {
+        id: "m_dark_knight_2",
+        title: "The Dark Knight",
+        genre: "Action",
+        year: 2008,
+        rating: 9.0,
+        ott: "Amazon Prime",
+        ottLink: "https://www.amazon.com/gp/video/detail/B001I181BE",
+        altLink: "https://www.youtube.com/results?search_query=The+Dark+Knight+stream",
+        status: "watched",
+        poster: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
+        notes: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests.",
+        createdAt: Date.now() - 1000 * 60 * 60 * 24 * 4
+      },
+      {
+        id: "m_interstellar_3",
+        title: "Interstellar",
+        genre: "Sci-Fi",
+        year: 2014,
+        rating: 8.7,
+        ott: "Amazon Prime",
+        ottLink: "https://www.amazon.com/gp/video/detail/B00TU9UFTS",
+        altLink: "https://www.google.com/search?q=where+to+watch+Interstellar",
+        status: "watchlist",
+        poster: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
+        notes: "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft.",
+        createdAt: Date.now() - 1000 * 60 * 60 * 24 * 3
+      },
+      {
+        id: "m_parasite_4",
+        title: "Parasite",
+        genre: "Thriller",
+        year: 2019,
+        rating: 8.5,
+        ott: "Disney+ Hotstar",
+        ottLink: "https://www.hotstar.com/search?q=Parasite",
+        altLink: "https://www.youtube.com/results?search_query=Parasite+movie+rent",
+        status: "watched",
+        poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
+        notes: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+        createdAt: Date.now() - 1000 * 60 * 60 * 24 * 2
+      },
+      {
+        id: "m_spirited_away_5",
+        title: "Spirited Away",
+        genre: "Animation",
+        year: 2001,
+        rating: 8.6,
+        ott: "Netflix",
+        ottLink: "https://www.netflix.com/search?q=Spirited+Away",
+        altLink: "https://www.google.com/search?q=where+to+stream+Spirited+Away",
+        status: "watchlist",
+        poster: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80",
+        notes: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits.",
+        createdAt: Date.now() - 1000 * 60 * 60 * 24 * 1
+      },
+      {
+        id: "m_knives_out_6",
+        title: "Knives Out",
+        genre: "Comedy",
+        year: 2019,
+        rating: 7.9,
+        ott: "Apple TV+",
+        ottLink: "https://tv.apple.com/search?term=Knives+Out",
+        altLink: "https://www.youtube.com/results?search_query=Knives+Out+movie",
+        status: "watchlist",
+        poster: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=600&auto=format&fit=crop&q=80",
+        notes: "A detective investigates the death of the patriarch of an eccentric, combative family.",
+        createdAt: Date.now()
+      }
+    ];
+
+    // --- GENRE COLOR MAP ---
+    const GENRE_COLORS = {
+      'Action': { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30', gradient: 'from-red-600/20 to-orange-600/20' },
+      'Sci-Fi': { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/30', gradient: 'from-cyan-600/20 to-blue-600/20' },
+      'Thriller': { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/30', gradient: 'from-amber-600/20 to-red-600/20' },
+      'Comedy': { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30', gradient: 'from-yellow-600/20 to-lime-600/20' },
+      'Drama': { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', gradient: 'from-emerald-600/20 to-teal-600/20' },
+      'Horror': { bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30', gradient: 'from-purple-600/20 to-rose-600/20' },
+      'Animation': { bg: 'bg-pink-500/15', text: 'text-pink-400', border: 'border-pink-500/30', gradient: 'from-pink-600/20 to-purple-600/20' },
+      'Romance': { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-rose-500/30', gradient: 'from-rose-600/20 to-pink-600/20' },
+      'Adventure': { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/30', gradient: 'from-orange-600/20 to-yellow-600/20' },
+      'Crime': { bg: 'bg-slate-500/15', text: 'text-slate-300', border: 'border-slate-500/30', gradient: 'from-slate-600/20 to-zinc-600/20' },
+      'Mystery': { bg: 'bg-indigo-500/15', text: 'text-indigo-400', border: 'border-indigo-500/30', gradient: 'from-indigo-600/20 to-purple-600/20' },
+      'Fantasy': { bg: 'bg-violet-500/15', text: 'text-violet-400', border: 'border-violet-500/30', gradient: 'from-violet-600/20 to-fuchsia-600/20' },
+      'Documentary': { bg: 'bg-teal-500/15', text: 'text-teal-400', border: 'border-teal-500/30', gradient: 'from-teal-600/20 to-emerald-600/20' },
+      'Default': { bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/30', gradient: 'from-purple-600/20 to-indigo-600/20' }
+    };
+
+    // --- OTT PLATFORM BADGES & ICONS ---
+    const OTT_METADATA = {
+      'Netflix': { bg: 'bg-red-600/20', text: 'text-red-400', border: 'border-red-500/30', icon: 'tv', color: '#E50914' },
+      'Amazon Prime': { bg: 'bg-blue-600/20', text: 'text-blue-400', border: 'border-blue-500/30', icon: 'play-square', color: '#00A8E1' },
+      'Disney+ Hotstar': { bg: 'bg-indigo-600/20', text: 'text-indigo-300', border: 'border-indigo-500/30', icon: 'sparkles', color: '#113CCF' },
+      'Apple TV+': { bg: 'bg-slate-600/20', text: 'text-slate-200', border: 'border-slate-500/30', icon: 'tv-2', color: '#FFFFFF' },
+      'HBO Max': { bg: 'bg-purple-600/20', text: 'text-purple-300', border: 'border-purple-500/30', icon: 'film', color: '#5822B4' },
+      'Hulu': { bg: 'bg-emerald-600/20', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: 'play', color: '#1CE783' },
+      'Paramount+': { bg: 'bg-sky-600/20', text: 'text-sky-400', border: 'border-sky-500/30', icon: 'mountain', color: '#0064FF' },
+      'Peacock': { bg: 'bg-teal-600/20', text: 'text-teal-300', border: 'border-teal-500/30', icon: 'feather', color: '#000000' },
+      'YouTube': { bg: 'bg-red-600/20', text: 'text-red-400', border: 'border-red-500/30', icon: 'video', color: '#FF0000' },
+      'SonyLIV': { bg: 'bg-amber-600/20', text: 'text-amber-400', border: 'border-amber-500/30', icon: 'monitor', color: '#F78320' },
+      'Zee5': { bg: 'bg-fuchsia-600/20', text: 'text-fuchsia-300', border: 'border-fuchsia-500/30', icon: 'play-circle', color: '#8230C6' },
+      'Default': { bg: 'bg-slate-700/30', text: 'text-slate-300', border: 'border-slate-600/30', icon: 'monitor-play', color: '#8B5CF6' }
+    };
+
+    // --- APPLICATION STATE ---
+    const STORAGE_KEY = 'movie_genre_tracker_data_v1';
+    let movies = [];
+    let activeGenre = 'ALL';
+    let searchQuery = '';
+    let selectedOtt = 'ALL';
+    let selectedStatus = 'ALL';
+    let selectedSort = 'newest';
+
+    // --- DOM ELEMENTS ---
+    const moviesGrid = document.getElementById('movies-grid');
+    const genreTabsContainer = document.getElementById('genre-tabs-container');
+    const emptyState = document.getElementById('empty-state');
+    const resultsCount = document.getElementById('results-count');
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search-btn');
+    const ottFilter = document.getElementById('ott-filter');
+    const statusFilter = document.getElementById('status-filter');
+    const sortSelect = document.getElementById('sort-select');
+
+    // Stats elements
+    const statTotal = document.getElementById('stat-total');
+    const statGenres = document.getElementById('stat-genres');
+    const statWatched = document.getElementById('stat-watched');
+    const statWatchlist = document.getElementById('stat-watchlist');
+
+    // Modal elements
+    const movieModal = document.getElementById('movie-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const movieForm = document.getElementById('movie-form');
+    const movieIdInput = document.getElementById('movie-id');
+    const movieTitleInput = document.getElementById('movie-title');
+    const movieGenreSelect = document.getElementById('movie-genre-select');
+    const movieGenreCustom = document.getElementById('movie-genre-custom');
+    const movieYearInput = document.getElementById('movie-year');
+    const movieOttSelect = document.getElementById('movie-ott');
+    const movieOttLinkInput = document.getElementById('movie-ott-link');
+    const movieAltLinkInput = document.getElementById('movie-alt-link');
+    const movieRatingInput = document.getElementById('movie-rating');
+    const movieStatusSelect = document.getElementById('movie-status');
+    const moviePosterInput = document.getElementById('movie-poster');
+    const movieNotesInput = document.getElementById('movie-notes');
+    const saveBtnText = document.getElementById('save-btn-text');
+
+    // Button triggers
+    const openAddModalBtn = document.getElementById('open-add-modal-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const cancelModalBtn = document.getElementById('cancel-modal-btn');
+    const resetDataBtn = document.getElementById('reset-data-btn');
+    const clearAllFiltersBtn = document.getElementById('clear-all-filters-btn');
+    const emptyAddBtn = document.getElementById('empty-add-btn');
+    const exportJsonBtn = document.getElementById('export-json-btn');
+    const fillYtSearchBtn = document.getElementById('fill-yt-search-btn');
+    const fillGoogleSearchBtn = document.getElementById('fill-google-search-btn');
+
+    // --- LOCAL STORAGE HELPERS ---
+    function loadMovies() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          movies = JSON.parse(stored);
+        } else {
+          movies = [...SAMPLE_MOVIES];
+          saveMovies();
+        }
+      } catch (err) {
+        console.error('Failed to load movies from localStorage', err);
+        movies = [...SAMPLE_MOVIES];
+      }
+    }
+
+    function saveMovies() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(movies));
+      } catch (err) {
+        console.error('Failed to save to localStorage', err);
+        showToast('Error saving data to local storage', 'error');
+      }
+      updateStats();
+    }
+
+    // --- STATS CALCULATION ---
+    function updateStats() {
+      statTotal.textContent = movies.length;
+      const uniqueGenres = new Set(movies.map(m => m.genre.trim()).filter(Boolean));
+      statGenres.textContent = uniqueGenres.size;
+      const watched = movies.filter(m => m.status === 'watched').length;
+      statWatched.textContent = watched;
+      statWatchlist.textContent = movies.length - watched;
+    }
+
+    // --- GENRE TABS RENDERING ---
+    function renderGenreTabs() {
+      const genreCounts = {};
+      movies.forEach(m => {
+        const g = m.genre ? m.genre.trim() : 'Other';
+        genreCounts[g] = (genreCounts[g] || 0) + 1;
+      });
+
+      const genresList = Object.keys(genreCounts).sort();
+
+      let tabsHtml = `
+        <button
+          onclick="setGenreFilter('ALL')"
+          class="flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-2 border ${
+            activeGenre === 'ALL'
+              ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
+              : 'bg-slate-900/90 text-slate-400 border-white/5 hover:border-white/20 hover:text-slate-200'
+          }"
+        >
+          <span>All Genres</span>
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] ${
+            activeGenre === 'ALL' ? 'bg-purple-800 text-white' : 'bg-slate-800 text-slate-400'
+          }">${movies.length}</span>
+        </button>
+      `;
+
+      genresList.forEach(genre => {
+        const count = genreCounts[genre];
+        const isActive = activeGenre.toLowerCase() === genre.toLowerCase();
+        const colorStyle = GENRE_COLORS[genre] || GENRE_COLORS['Default'];
+
+        tabsHtml += `
+          <button
+            onclick="setGenreFilter('${genre.replace(/'/g, "\\'")}')"
+            class="flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 border ${
+              isActive
+                ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/30'
+                : 'bg-slate-900/90 text-slate-400 border-white/5 hover:border-white/20 hover:text-slate-200'
+            }"
+          >
+            <span class="w-2 h-2 rounded-full ${isActive ? 'bg-white' : colorStyle.text.replace('text-', 'bg-')}"></span>
+            <span>${escapeHtml(genre)}</span>
+            <span class="px-1.5 py-0.5 rounded-md text-[10px] ${
+              isActive ? 'bg-purple-800 text-white' : 'bg-slate-800 text-slate-400'
+            }">${count}</span>
+          </button>
+        `;
+      });
+
+      genreTabsContainer.innerHTML = tabsHtml;
+    }
+
+    // --- FILTER & SORT LOGIC ---
+    function getFilteredMovies() {
+      return movies.filter(movie => {
+        // Genre filter
+        if (activeGenre !== 'ALL' && movie.genre.toLowerCase() !== activeGenre.toLowerCase()) {
+          return false;
+        }
+
+        // OTT Filter
+        if (selectedOtt !== 'ALL') {
+          if (selectedOtt === 'OTHER') {
+            const known = ['Netflix', 'Amazon Prime', 'Disney+ Hotstar', 'Apple TV+', 'HBO Max', 'Hulu', 'YouTube'];
+            if (known.includes(movie.ott)) return false;
+          } else if (movie.ott !== selectedOtt) {
+            return false;
+          }
+        }
+
+        // Status Filter
+        if (selectedStatus !== 'ALL' && movie.status !== selectedStatus) {
+          return false;
+        }
+
+        // Search Query
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase().trim();
+          const inTitle = (movie.title || '').toLowerCase().includes(q);
+          const inGenre = (movie.genre || '').toLowerCase().includes(q);
+          const inOtt = (movie.ott || '').toLowerCase().includes(q);
+          const inNotes = (movie.notes || '').toLowerCase().includes(q);
+          const inYear = (movie.year || '').toString().includes(q);
+          if (!inTitle && !inGenre && !inOtt && !inNotes && !inYear) {
+            return false;
+          }
+        }
+
+        return true;
+      }).sort((a, b) => {
+        if (selectedSort === 'newest') return (b.createdAt || 0) - (a.createdAt || 0);
+        if (selectedSort === 'rating-desc') return (b.rating || 0) - (a.rating || 0);
+        if (selectedSort === 'year-desc') return (b.year || 0) - (a.year || 0);
+        if (selectedSort === 'title-asc') return (a.title || '').localeCompare(b.title || '');
+        return 0;
+      });
+    }
+
+    // --- RENDER MOVIE CARDS ---
+    function renderMovies() {
+      renderGenreTabs();
+      const filtered = getFilteredMovies();
+      resultsCount.textContent = `Showing ${filtered.length} of ${movies.length} movies`;
+
+      if (filtered.length === 0) {
+        moviesGrid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      const cardsHtml = filtered.map(movie => {
+        const genreStyle = GENRE_COLORS[movie.genre] || GENRE_COLORS['Default'];
+        const ottStyle = OTT_METADATA[movie.ott] || OTT_METADATA['Default'];
+        const isWatched = movie.status === 'watched';
+
+        // Auto fallback links if empty
+        const defaultOttLink = movie.ottLink && movie.ottLink.trim()
+          ? movie.ottLink
+          : `https://www.google.com/search?q=${encodeURIComponent(movie.title + ' watch on ' + movie.ott)}`;
+
+        const defaultAltLink = movie.altLink && movie.altLink.trim()
+          ? movie.altLink
+          : `https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' full movie stream')}`;
+
+        // Poster image or fallback gradient card
+        const posterImg = movie.poster && movie.poster.trim()
+          ? `<img src="${escapeHtml(movie.poster)}" alt="${escapeHtml(movie.title)}" loading="lazy" class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\\'w-full h-full bg-gradient-to-br ${genreStyle.gradient} flex items-center justify-center text-4xl\\\'>🎬</div>';">`
+          : `<div class="w-full h-full bg-gradient-to-br ${genreStyle.gradient} flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+              <i data-lucide="clapperboard" class="w-12 h-12 text-purple-400/60 mb-2"></i>
+              <span class="text-xs font-semibold text-slate-300 uppercase tracking-widest">${escapeHtml(movie.genre)}</span>
+            </div>`;
+
+        return `
+          <div class="glass-card rounded-2xl overflow-hidden flex flex-col group relative">
+
+            <!-- Poster / Media Banner -->
+            <div class="relative h-48 w-full bg-slate-900 overflow-hidden">
+              ${posterImg}
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+
+              <!-- Genre & Status Badges (Top Overlays) -->
+              <div class="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider backdrop-blur-md ${genreStyle.bg} ${genreStyle.text} border ${genreStyle.border}">
+                  ${escapeHtml(movie.genre)}
+                </span>
+                ${movie.year ? `<span class="px-2 py-0.5 rounded-lg text-[11px] font-medium bg-black/60 text-slate-300 backdrop-blur-md border border-white/10">${movie.year}</span>` : ''}
+              </div>
+
+              <!-- Quick Status Toggle & Card Action Menu -->
+              <div class="absolute top-3 right-3 flex items-center gap-1">
+                <button
+                  onclick="toggleWatchStatus('${movie.id}')"
+                  title="${isWatched ? 'Mark as Want to Watch' : 'Mark as Watched'}"
+                  class="p-1.5 rounded-lg backdrop-blur-md transition ${
+                    isWatched
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      : 'bg-black/60 text-slate-300 hover:text-white border border-white/10 hover:bg-black/80'
+                  }"
+                >
+                  <i data-lucide="${isWatched ? 'check-circle' : 'circle'}" class="w-4 h-4"></i>
+                </button>
+                <button
+                  onclick="openEditModal('${movie.id}')"
+                  title="Edit Movie"
+                  class="p-1.5 rounded-lg bg-black/60 text-slate-300 hover:text-white backdrop-blur-md border border-white/10 hover:bg-purple-600/40 hover:border-purple-500/40 transition"
+                >
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button
+                  onclick="deleteMovie('${movie.id}')"
+                  title="Delete Movie"
+                  class="p-1.5 rounded-lg bg-black/60 text-slate-300 hover:text-rose-400 backdrop-blur-md border border-white/10 hover:bg-rose-600/30 hover:border-rose-500/40 transition"
+                >
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <!-- Rating Badge (Bottom Left of Poster) -->
+              ${movie.rating ? `
+                <div class="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md border border-amber-500/30 text-amber-400 text-xs font-bold">
+                  <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                  <span>${movie.rating}</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
+              <div>
+                <div class="flex items-start justify-between gap-2 mb-1.5">
+                  <h3 class="font-display font-bold text-base sm:text-lg text-white leading-snug group-hover:text-purple-300 transition">
+                    ${escapeHtml(movie.title)}
+                  </h3>
+                </div>
+
+                ${movie.notes ? `
+                  <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                    ${escapeHtml(movie.notes)}
+                  </p>
+                ` : `
+                  <p class="text-xs text-slate-600 italic">No notes added.</p>
+                `}
+              </div>
+
+              <!-- OTT Streaming Buttons -->
+              <div class="space-y-2 pt-2 border-t border-white/5">
+
+                <!-- Primary OTT Stream Button -->
+                <a
+                  href="${escapeHtml(defaultOttLink)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-between transition border ${ottStyle.bg} ${ottStyle.text} ${ottStyle.border} hover:brightness-125"
+                >
+                  <span class="flex items-center gap-2">
+                    <i data-lucide="${ottStyle.icon || 'tv'}" class="w-3.5 h-3.5"></i>
+                    <span>Watch on ${escapeHtml(movie.ott)}</span>
+                  </span>
+                  <i data-lucide="external-link" class="w-3.5 h-3.5 opacity-70"></i>
+                </a>
+
+                <!-- Alternative / Fallback Search Button -->
+                <a
+                  href="${escapeHtml(defaultAltLink)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-full py-1.5 px-3 rounded-xl text-[11px] font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-white/5 hover:border-white/10 flex items-center justify-between transition"
+                >
+                  <span class="flex items-center gap-1.5">
+                    <i data-lucide="compass" class="w-3.5 h-3.5 text-purple-400"></i>
+                    <span>Alternative / Fallback Stream</span>
+                  </span>
+                  <i data-lucide="arrow-up-right" class="w-3 h-3 text-slate-500"></i>
+                </a>
+
+              </div>
+
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      moviesGrid.innerHTML = cardsHtml;
+      lucide.createIcons();
+    }
+
+    // --- UI EVENT HANDLERS ---
+    window.setGenreFilter = function(genre) {
+      activeGenre = genre;
+      renderMovies();
+    };
+
+    window.toggleWatchStatus = function(id) {
+      const movie = movies.find(m => m.id === id);
+      if (movie) {
+        movie.status = movie.status === 'watched' ? 'watchlist' : 'watched';
+        saveMovies();
+        renderMovies();
+        showToast(`Marked "${movie.title}" as ${movie.status === 'watched' ? 'Watched' : 'Want to Watch'}`);
+      }
+    };
+
+    window.deleteMovie = function(id) {
+      const movie = movies.find(m => m.id === id);
+      if (!movie) return;
+      if (confirm(`Are you sure you want to remove "${movie.title}"?`)) {
+        movies = movies.filter(m => m.id !== id);
+        saveMovies();
+        renderMovies();
+        showToast(`Removed "${movie.title}" from collection`, 'info');
+      }
+    };
+
+    window.openEditModal = function(id) {
+      const movie = movies.find(m => m.id === id);
+      if (!movie) return;
+
+      modalTitle.textContent = "Edit Movie";
+      saveBtnText.textContent = "Update Movie";
+      movieIdInput.value = movie.id;
+      movieTitleInput.value = movie.title || '';
+
+      // Handle Genre select/custom
+      const standardGenres = ['Action', 'Sci-Fi', 'Thriller', 'Comedy', 'Drama', 'Horror', 'Animation', 'Romance', 'Adventure', 'Crime', 'Mystery', 'Fantasy', 'Documentary'];
+      if (standardGenres.includes(movie.genre)) {
+        movieGenreSelect.value = movie.genre;
+        movieGenreCustom.classList.add('hidden');
+        movieGenreCustom.value = '';
+      } else {
+        movieGenreSelect.value = 'custom';
+        movieGenreCustom.classList.remove('hidden');
+        movieGenreCustom.value = movie.genre || '';
+      }
+
+      movieYearInput.value = movie.year || '';
+      movieOttSelect.value = movie.ott || 'Netflix';
+      movieOttLinkInput.value = movie.ottLink || '';
+      movieAltLinkInput.value = movie.altLink || '';
+      movieRatingInput.value = movie.rating || '';
+      movieStatusSelect.value = movie.status || 'watchlist';
+      moviePosterInput.value = movie.poster || '';
+      movieNotesInput.value = movie.notes || '';
+
+      movieModal.classList.remove('hidden');
+      movieModal.classList.add('flex');
+      lucide.createIcons();
+    };
+
+    function openAddModal() {
+      modalTitle.textContent = "Add New Movie";
+      saveBtnText.textContent = "Save Movie";
+      movieForm.reset();
+      movieIdInput.value = '';
+      movieGenreSelect.value = 'Action';
+      movieGenreCustom.classList.add('hidden');
+      movieStatusSelect.value = 'watchlist';
+      movieModal.classList.remove('hidden');
+      movieModal.classList.add('flex');
+      movieTitleInput.focus();
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      movieModal.classList.add('hidden');
+      movieModal.classList.remove('flex');
+      movieForm.reset();
+    }
+
+    // Modal Events
+    openAddModalBtn.addEventListener('click', openAddModal);
+    emptyAddBtn.addEventListener('click', openAddModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelModalBtn.addEventListener('click', closeModal);
+    movieModal.addEventListener('click', (e) => {
+      if (e.target === movieModal) closeModal();
+    });
+
+    // Custom Genre Toggle
+    movieGenreSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'custom') {
+        movieGenreCustom.classList.remove('hidden');
+        movieGenreCustom.focus();
+      } else {
+        movieGenreCustom.classList.add('hidden');
+      }
+    });
+
+    // Quick Search Generators in Modal
+    fillYtSearchBtn.addEventListener('click', () => {
+      const title = movieTitleInput.value.trim();
+      if (!title) {
+        showToast('Please enter a movie title first', 'error');
+        movieTitleInput.focus();
+        return;
+      }
+      movieAltLinkInput.value = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' Full Movie')}`;
+      showToast('Generated YouTube fallback search link');
+    });
+
+    fillGoogleSearchBtn.addEventListener('click', () => {
+      const title = movieTitleInput.value.trim();
+      if (!title) {
+        showToast('Please enter a movie title first', 'error');
+        movieTitleInput.focus();
+        return;
+      }
+      movieAltLinkInput.value = `https://www.google.com/search?q=${encodeURIComponent('Where to stream ' + title)}`;
+      showToast('Generated Google stream search link');
+    });
+
+    // Form Submit (Add or Edit)
+    movieForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const title = movieTitleInput.value.trim();
+      if (!title) return;
+
+      let genre = movieGenreSelect.value;
+      if (genre === 'custom') {
+        genre = movieGenreCustom.value.trim() || 'Other';
+      }
+
+      const id = movieIdInput.value || `m_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      const existingIdx = movies.findIndex(m => m.id === id);
+
+      const movieData = {
+        id: id,
+        title: title,
+        genre: genre,
+        year: movieYearInput.value ? parseInt(movieYearInput.value, 10) : null,
+        rating: movieRatingInput.value ? parseFloat(movieRatingInput.value) : null,
+        ott: movieOttSelect.value,
+        ottLink: movieOttLinkInput.value.trim(),
+        altLink: movieAltLinkInput.value.trim(),
+        status: movieStatusSelect.value,
+        poster: moviePosterInput.value.trim(),
+        notes: movieNotesInput.value.trim(),
+        createdAt: existingIdx >= 0 ? movies[existingIdx].createdAt : Date.now()
+      };
+
+      if (existingIdx >= 0) {
+        movies[existingIdx] = movieData;
+        showToast(`Updated "${title}" successfully!`);
+      } else {
+        movies.unshift(movieData);
+        showToast(`Added "${title}" to your collection!`);
+      }
+
+      saveMovies();
+      renderMovies();
+      closeModal();
+    });
+
+    // Search input handler
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      clearSearchBtn.classList.toggle('hidden', !searchQuery);
+      renderMovies();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      renderMovies();
+    });
+
+    // Filter changes
+    ottFilter.addEventListener('change', (e) => {
+      selectedOtt = e.target.value;
+      renderMovies();
+    });
+
+    statusFilter.addEventListener('change', (e) => {
+      selectedStatus = e.target.value;
+      renderMovies();
+    });
+
+    sortSelect.addEventListener('change', (e) => {
+      selectedSort = e.target.value;
+      renderMovies();
+    });
+
+    // Reset All Filters
+    clearAllFiltersBtn.addEventListener('click', () => {
+      activeGenre = 'ALL';
+      searchQuery = '';
+      searchInput.value = '';
+      selectedOtt = 'ALL';
+      ottFilter.value = 'ALL';
+      selectedStatus = 'ALL';
+      statusFilter.value = 'ALL';
+      selectedSort = 'newest';
+      sortSelect.value = 'newest';
+      clearSearchBtn.classList.add('hidden');
+      renderMovies();
+      showToast('Filters cleared');
+    });
+
+    // Reset to Sample Data
+    resetDataBtn.addEventListener('click', () => {
+      if (confirm('Reset movie collection back to sample movies? Any custom entries will be replaced.')) {
+        movies = JSON.parse(JSON.stringify(SAMPLE_MOVIES));
+        saveMovies();
+        renderMovies();
+        showToast('Reset to default sample movies', 'info');
+      }
+    });
+
+    // Export JSON
+    exportJsonBtn.addEventListener('click', () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(movies, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `movie_genre_tracker_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Exported movie data as JSON');
+    });
+
+    // Toast Notification helper
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const bg = type === 'error' ? 'bg-rose-900/90 border-rose-500/50 text-rose-200' :
+                 type === 'info' ? 'bg-slate-800/90 border-slate-600/50 text-slate-200' :
+                 'bg-purple-900/90 border-purple-500/50 text-purple-200';
+
+      const icon = type === 'error' ? 'alert-circle' :
+                   type === 'info' ? 'info' : 'check-circle-2';
+
+      toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md text-xs font-medium flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0 ${bg}`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4"></i>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      // Auto dismiss
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Escape HTML helper
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Set Footer Year
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+
+    // --- INITIALIZE APP ---
+    loadMovies();
+    updateStats();
+    renderMovies();
+  </script>
+</body>
+</html>
